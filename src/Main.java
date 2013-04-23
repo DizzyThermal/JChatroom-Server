@@ -1,6 +1,7 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -8,13 +9,18 @@ import java.util.ArrayList;
 public class Main
 {
 	public static ServerSocket serverSocket;
-	public static BufferedReader bReader;
-	public static PrintWriter pWriter;
 	public static String clientMessage;
+	
+	public static BufferedOutputStream bOut;
+	public static InputStream inStream;
+	public static ByteArrayOutputStream baos;
+	public static int numBytes = 0;
 	
 	public static int userId = 0;
 	
 	public static ArrayList<User> userList = new ArrayList<User>();
+	
+	public static ArrayList<ConnectionThread> clientThreads = new ArrayList<ConnectionThread>();
 
 	public static void main(String[] args)
 	{
@@ -30,32 +36,7 @@ public class Main
 		{
 			try
 			{
-				Socket connected = serverSocket.accept();
-
-				bReader = new BufferedReader(new InputStreamReader (connected.getInputStream()));
-				pWriter = new PrintWriter(connected.getOutputStream(), true);
-				
-				while (true)
-				{
-					clientMessage = bReader.readLine();
-					
-					if(clientMessage.contains("/connected"))
-					{
-						userList.add(new User(userId++, clientMessage.substring(11)));
-						pWriter.println("/userlist " + getUserList());
-						
-						System.out.println(connected.getInetAddress().toString().substring(1) + ":" + connected.getPort() + " connected!");
-					}
-					else if(clientMessage.contains("/name"))
-					{
-						pWriter.println("/msg ** " + getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])) + " CHANGED THEIR NAME TO " + (clientMessage.split(" ")[1]).split("\\\\")[1].substring(1, (clientMessage.split(" ")[1]).split("\\\\")[1].length()-1) + " **");
-						pWriter.println("/update " + updateUser(clientMessage));
-					}
-					else if(clientMessage.contains("/disconnect"))
-						pWriter.println("/remove " + removeUser(clientMessage));
-					else
-						pWriter.println("/msg " + clientMessage);
-				}
+				clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
 			}
 			catch (Exception e) { e.printStackTrace(); }
 		}
@@ -124,5 +105,66 @@ public class Main
 		}
 		
 		return null;
+	}
+	
+	public static void receiveAndBounceMessage(String incomingMessage, Socket socket)
+	{
+		incomingMessage = incomingMessage.substring(6);
+		int id = Integer.parseInt(incomingMessage.split("\\\\")[0]);
+		String fileName = incomingMessage.split("\\\\")[1];
+		
+		byte[] incomingBytes = new byte[1];
+		try
+		{
+			inStream = socket.getInputStream();
+		}
+		catch(Exception e) { e.printStackTrace(); }
+		
+		baos = new ByteArrayOutputStream();
+		try
+		{
+			numBytes = inStream.read(incomingBytes, 0, incomingBytes.length);
+			do
+			{
+				baos.write(incomingBytes);
+				numBytes = inStream.read(incomingBytes);
+			} while (numBytes != -1);
+		}
+		catch(IOException ex) { ex.printStackTrace(); }
+		
+		try 
+		{
+			bOut = new BufferedOutputStream(socket.getOutputStream());
+		} 
+		catch (IOException e1) { e1.printStackTrace(); }
+		if (bOut != null)
+		{
+			byte[] outArray = baos.toByteArray();
+
+            try 
+            {
+            	writeToAll("/file " + id + "\\" + fileName);
+                bOut.write(outArray, 0, outArray.length);
+                bOut.flush();
+                bOut.close();
+            } catch (IOException ex) { ex.printStackTrace(); }
+		}
+	}
+	
+	public static void writeToAll(String message)
+	{
+		for(int i = 0; i < clientThreads.size(); i++)
+			clientThreads.get(i).writeToClient(message);
+	}
+	
+	public static String parseName(String clientMessage)
+	{
+		clientMessage = clientMessage.substring(6);
+		// 1\\"name"
+		clientMessage = clientMessage.split("\\\\")[1];
+		if(clientMessage.charAt(0) == '"')
+			clientMessage = clientMessage.substring(1, clientMessage.length()-1);
+		
+		return clientMessage.replace("/", "");
 	}
 }
