@@ -35,6 +35,7 @@ public class ConnectionThread
 						if(clientMessage.contains("/connected"))
 						{
 							Main.userList.add(new User(id, clientMessage.substring(11)));
+							pWriter.println("/id " + id);
 							Main.writeToAll("/userlist " + Main.getUserList());
 						}
 						else if(clientMessage.contains("/name"))
