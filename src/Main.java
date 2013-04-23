@@ -160,7 +160,7 @@ public class Main
 	public static String parseName(String clientMessage)
 	{
 		clientMessage = clientMessage.substring(6);
-		// 1\\"name"
+
 		clientMessage = clientMessage.split("\\\\")[1];
 		if(clientMessage.charAt(0) == '"')
 			clientMessage = clientMessage.substring(1, clientMessage.length()-1);

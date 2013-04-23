@@ -39,7 +39,7 @@ public class ConnectionThread
 						}
 						else if(clientMessage.contains("/name"))
 						{
-							Main.writeToAll("/msg ** " + Main.getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])) + " CHANGED THEIR NAME TO " + Main.parseName(clientMessage) + " **");
+							Main.writeToAll("/console ** " + Main.getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])) + " CHANGED THEIR NAME TO " + Main.parseName(clientMessage) + " **");
 							Main.writeToAll("/update " + Main.updateUser(clientMessage));
 						}
 						else if(clientMessage.contains("/file"))
