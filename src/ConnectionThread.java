@@ -25,8 +25,10 @@ public class ConnectionThread
 			{
 				try
 				{
-					System.out.println(socket.getInetAddress() + " " + socket.getPort());
-					//Socket newConnection = new Socket(socket.getInetAddress().toString(),(Integer.parseInt(Resource.PORT) + id));
+					String IP = socket.getInetAddress() + ":" + socket.getPort() + " connected!";
+					IP = IP.substring(1);
+
+					System.out.println(IP);
 					
 					while(true)
 					{
@@ -46,7 +48,10 @@ public class ConnectionThread
 						else if(clientMessage.contains("/file"))
 							Main.receiveAndBounceMessage(clientMessage, socket);
 						else if(clientMessage.contains("/disconnect"))
+						{
 							Main.writeToAll("/remove " + Main.removeUser(clientMessage));
+							thread.stop();
+						}
 						else
 							Main.writeToAll("/msg " + clientMessage);
 					}
