@@ -131,22 +131,25 @@ public class Main
 			} while (numBytes != -1);
 		}
 		catch(IOException ex) { ex.printStackTrace(); }
-    	
-		try 
+		for(int i = 0; i < userList.size(); i++)
 		{
-			bOut = new BufferedOutputStream(socket.getOutputStream());
-		} 
-		catch (IOException e1) { e1.printStackTrace(); }
-		if (bOut != null)
-		{
-			byte[] outArray = baos.toByteArray();
-
-            try 
-            {
-                bOut.write(outArray, 0, outArray.length);
-                bOut.flush();
-                bOut.close();
-            } catch (IOException ex) { ex.printStackTrace(); }
+			try 
+			{
+				socket = new Socket(clientThreads.get(i).IP,Integer.parseInt(Resource.PORT) + clientThreads.get(i).ID*2);
+				bOut = new BufferedOutputStream(socket.getOutputStream());
+			} 
+			catch (IOException e1) { e1.printStackTrace(); }
+			if (bOut != null)
+			{
+				byte[] outArray = baos.toByteArray();
+	
+	            try 
+	            {
+	                bOut.write(outArray, 0, outArray.length);
+	                bOut.flush();
+	                bOut.close();
+	            } catch (IOException ex) { ex.printStackTrace(); }
+			}
 		}
 	}
 	

@@ -8,9 +8,12 @@ public class ConnectionThread
 	Thread thread;
 	BufferedReader bReader;
 	PrintWriter pWriter;
+	String IP = null;
+	int ID = -1;
 	
 	public ConnectionThread(final int id, final Socket socket)
 	{
+		ID = id;
 		try
 		{
 			bReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -25,10 +28,10 @@ public class ConnectionThread
 			{
 				try
 				{
-					String IP = socket.getInetAddress() + ":" + socket.getPort() + " connected!";
+					IP = socket.getInetAddress() + ":" + socket.getPort() + " connected!";
 					IP = IP.substring(1);
 
-					System.out.println(IP);
+					//System.out.println(IP);
 					
 					while(!socket.isClosed())
 					{
