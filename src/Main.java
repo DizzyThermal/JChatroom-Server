@@ -36,7 +36,7 @@ public class Main
 		{
 			try
 			{
-				clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
+					clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
 			}
 			catch (Exception e) { e.printStackTrace(); }
 		}
@@ -112,7 +112,7 @@ public class Main
 		incomingMessage = incomingMessage.substring(6);
 		int id = Integer.parseInt(incomingMessage.split("\\\\")[0]);
 		String fileName = incomingMessage.split("\\\\")[1];
-		
+		writeToAll("/file " + id + "\\" + fileName);
 		byte[] incomingBytes = new byte[1];
 		try
 		{
@@ -131,7 +131,7 @@ public class Main
 			} while (numBytes != -1);
 		}
 		catch(IOException ex) { ex.printStackTrace(); }
-		
+    	
 		try 
 		{
 			bOut = new BufferedOutputStream(socket.getOutputStream());
@@ -143,7 +143,6 @@ public class Main
 
             try 
             {
-            	writeToAll("/file " + id + "\\" + fileName);
                 bOut.write(outArray, 0, outArray.length);
                 bOut.flush();
                 bOut.close();
@@ -160,7 +159,7 @@ public class Main
 	public static String parseName(String clientMessage)
 	{
 		clientMessage = clientMessage.substring(6);
-
+		// 1\\"name"
 		clientMessage = clientMessage.split("\\\\")[1];
 		if(clientMessage.charAt(0) == '"')
 			clientMessage = clientMessage.substring(1, clientMessage.length()-1);

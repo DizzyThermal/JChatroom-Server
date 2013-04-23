@@ -30,11 +30,15 @@ public class ConnectionThread
 
 					System.out.println(IP);
 					
-					while(true)
+					while(!socket.isClosed())
 					{
 						String clientMessage = bReader.readLine();
-						
-						if(clientMessage.contains("/connected"))
+						System.out.println(clientMessage);
+						if (clientMessage == null)
+						{
+							//system.out.println("null");
+						}
+						else if(clientMessage.contains("/connected"))
 						{
 							Main.userList.add(new User(id, clientMessage.substring(11)));
 							pWriter.println("/id " + id);
@@ -46,7 +50,10 @@ public class ConnectionThread
 							Main.writeToAll("/update " + Main.updateUser(clientMessage));
 						}
 						else if(clientMessage.contains("/file"))
-							Main.receiveAndBounceMessage(clientMessage, socket);
+						{	
+							Main.receiveAndBounceMessage(clientMessage, socket);			
+							
+						}
 						else if(clientMessage.contains("/disconnect"))
 						{
 							Main.writeToAll("/remove " + Main.removeUser(clientMessage));
