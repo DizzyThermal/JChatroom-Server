@@ -8,8 +8,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import javax.swing.JFrame;
+
 public class Main
 {
+	public static String transferType = "TCP";
+	
+	public static boolean connectionGUIStatus = false;
+
 	public static ServerSocket serverSocket;
 	public static String clientMessage;
 	
@@ -30,7 +36,18 @@ public class Main
 	
 	public static void main(String[] args)
 	{
-		if(args[0].equals("-t")) {
+		ConnectionGUI cGUI = new ConnectionGUI();
+		
+		cGUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		cGUI.setSize(300, 100);
+		cGUI.setResizable(false);
+		cGUI.setVisible(true);
+		
+		while(!connectionGUIStatus)
+			continue;
+		
+		if(transferType.equals("TCP"))
+		{
 			try
 			{
 				serverSocket = new ServerSocket(Integer.parseInt(Resource.PORT));
@@ -43,7 +60,6 @@ public class Main
 			{
 				try
 				{
-				
 					//System.out.println(serverSocket.getInetAddress().toString());
 					if(serverSocket.getInetAddress().toString() != "0.0.0.0/0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
 					{
@@ -53,16 +69,15 @@ public class Main
 				}
 				catch (Exception e) { e.printStackTrace(); }
 			}
-		} else if(args[0].equals("-u")) {
-			
-			try {
+		}
+		else
+		{
+			try
+			{
 				serverUDPSocket = new DatagramSocket(8015);
 				
-			} catch (Exception e) { e.printStackTrace(); }
-			
-			
-		} else {
-			System.out.println("arg should be -t or -u, yo!");
+			}
+			catch (Exception e) { e.printStackTrace(); }
 		}
 	}
 	
