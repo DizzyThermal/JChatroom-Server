@@ -29,14 +29,15 @@ public class ConnectionThread
 				try
 				{
 					IP = socket.getInetAddress() + ":" + socket.getPort() + " connected!";
-					IP = IP.substring(1);
+					System.out.println(IP);
+					IP = socket.getInetAddress().toString();
 
-					//System.out.println(IP);
-					
 					while(!socket.isClosed())
 					{
+						if(bReader.ready())
+						{
 						String clientMessage = bReader.readLine();
-						System.out.println(clientMessage);
+						//System.out.println(clientMessage);
 						if (clientMessage == null)
 						{
 							//system.out.println("null");
@@ -60,10 +61,12 @@ public class ConnectionThread
 						else if(clientMessage.contains("/disconnect"))
 						{
 							Main.writeToAll("/remove " + Main.removeUser(clientMessage));
+							Main.ips.remove(IP);
 							thread.stop();
 						}
 						else
 							Main.writeToAll("/msg " + clientMessage);
+					}
 					}
 				}
 				catch (Exception e) { e.printStackTrace(); }

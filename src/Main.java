@@ -19,7 +19,7 @@ public class Main
 	public static int userId = 0;
 	
 	public static ArrayList<User> userList = new ArrayList<User>();
-	
+	public static ArrayList<String> ips = new ArrayList<String>();
 	public static ArrayList<ConnectionThread> clientThreads = new ArrayList<ConnectionThread>();
 
 	public static void main(String[] args)
@@ -36,7 +36,11 @@ public class Main
 		{
 			try
 			{
+				if(serverSocket.getInetAddress().toString() != "0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
+				{
 					clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
+					ips.add(serverSocket.getInetAddress().toString());
+				}
 			}
 			catch (Exception e) { e.printStackTrace(); }
 		}
@@ -116,6 +120,8 @@ public class Main
 		byte[] incomingBytes = new byte[1];
 		try
 		{
+			ServerSocket temp = new ServerSocket(Integer.parseInt(Resource.PORT)+10);
+			socket = temp.accept();
 			inStream = socket.getInputStream();
 		}
 		catch(Exception e) { e.printStackTrace(); }
@@ -135,7 +141,7 @@ public class Main
 		{
 			try 
 			{
-				socket = new Socket(clientThreads.get(i).IP,Integer.parseInt(Resource.PORT) + clientThreads.get(i).ID*2);
+				socket = new Socket(clientThreads.get(i).IP.substring(1),Integer.parseInt(Resource.PORT) + clientThreads.get(i).ID);
 				bOut = new BufferedOutputStream(socket.getOutputStream());
 			} 
 			catch (IOException e1) { e1.printStackTrace(); }
