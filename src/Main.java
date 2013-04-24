@@ -2,6 +2,8 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -21,30 +23,46 @@ public class Main
 	public static ArrayList<User> userList = new ArrayList<User>();
 	public static ArrayList<String> ips = new ArrayList<String>();
 	public static ArrayList<ConnectionThread> clientThreads = new ArrayList<ConnectionThread>();
-
+	
+	public static DatagramSocket serverUDPSocket;
+	public static DatagramPacket receivePacket;
+	public static DatagramPacket sendPacket;
+	
 	public static void main(String[] args)
 	{
-		try
-		{
-			serverSocket = new ServerSocket(Integer.parseInt(Resource.PORT));
-		}
-		catch (Exception e) { e.printStackTrace(); }
-		
-		System.out.println("TCPServer Listening on Port: " + Resource.PORT);
-
-		while(true) 
-		{
+		if(args[0].equals("-t")) {
 			try
 			{
-			
-				//System.out.println(serverSocket.getInetAddress().toString());
-				if(serverSocket.getInetAddress().toString() != "0.0.0.0/0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
-				{
-					clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
-					ips.add(serverSocket.getInetAddress().toString().split("/")[0]);
-				}
+				serverSocket = new ServerSocket(Integer.parseInt(Resource.PORT));
 			}
 			catch (Exception e) { e.printStackTrace(); }
+			
+			System.out.println("TCPServer Listening on Port: " + Resource.PORT);
+	
+			while(true) 
+			{
+				try
+				{
+				
+					//System.out.println(serverSocket.getInetAddress().toString());
+					if(serverSocket.getInetAddress().toString() != "0.0.0.0/0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
+					{
+						clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
+						ips.add(serverSocket.getInetAddress().toString().split("/")[0]);
+					}
+				}
+				catch (Exception e) { e.printStackTrace(); }
+			}
+		} else if(args[0].equals("-u")) {
+			
+			try {
+				serverUDPSocket = new DatagramSocket(8015);
+				
+			} catch (Exception e) { e.printStackTrace(); }
+			
+			
+		} else {
+			System.out.println("arg should be -t or -u, yo!");
 		}
 	}
 	
