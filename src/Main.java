@@ -81,10 +81,11 @@ public class Main
 				
 				while(true)
 				{
+					receiveData = new byte[1024];
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 					UDPSocket.receive(receivePacket);
-					clientMessage = new String(receivePacket.getData());
-					//System.out.println(clientMessage);
+					clientMessage = new String(receivePacket.getData()).trim();
+					System.out.println(clientMessage);
 					if(receivePacket.getData().equals(null))
 					{
 							try { Thread.sleep(1);}
@@ -94,18 +95,22 @@ public class Main
 					{
 						userList.add(new User(++userId, new String(receiveData).substring(11), receivePacket.getAddress().toString().substring(1)));
 						System.out.println(receivePacket.getAddress());
-						UDPSocket.send(new DatagramPacket(String.valueOf(userId).getBytes(), String.valueOf(userId).getBytes().length,InetAddress.getByName("192.168.1.100")/*receivePacket.getAddress()*/,Integer.parseInt(Resource.UPORT)));
-						writeToAll("/userlist " + Main.getUserList());
+						UDPSocket.send(new DatagramPacket(("/id " + String.valueOf(userId)).getBytes(), ("/id " + String.valueOf(userId)).getBytes().length,receivePacket.getAddress(),Integer.parseInt(Resource.UPORT)));
+						writeToAll("/userlist " + getUserList());
 					}
 					else if(clientMessage.contains("/name"))
 					{
-						writeToAll("/console ** " + Main.getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])) + " CHANGED THEIR NAME TO " + Main.parseName(clientMessage) + " **");
-						writeToAll("/update " + Main.updateUser(clientMessage));
+						writeToAll("/console ** " + getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])).trim() + " CHANGED THEIR NAME TO " + parseName(clientMessage) + " **");
+						writeToAll("/update " + updateUser(clientMessage));
 					}
 					else if(clientMessage.contains("/disconnect"))
 					{
-						writeToAll("/remove " + Main.removeUser(clientMessage));
-						userList.remove(receivePacket.getAddress().toString());
+						writeToAll("/remove " + removeUser(clientMessage));
+						for(int i = 0; i < userList.size(); i++)
+						{
+							if(userList.get(i).getIp().equals(receivePacket.getAddress().toString().substring(1)))
+								userList.remove(i);
+						}
 					}
 					else
 						writeToAll("/msg " + clientMessage);
@@ -235,12 +240,23 @@ public class Main
 	
 	public static void writeToAll(String message)
 	{
-		for(int i = 0; i < userList.size(); i++)
+		if (transferType.equals("UDP"))
 		{
-			try {
-				UDPSocket.send(new DatagramPacket(message.getBytes(),message.getBytes().length,InetAddress.getByName(userList.get(i).getIp()),Integer.parseInt(Resource.UPORT)));
-			} catch (Exception e){ e.printStackTrace(); }
+			for(int i = 0; i < userList.size(); i++)
+			{
+				try {
+					UDPSocket.send(new DatagramPacket(message.getBytes(),message.getBytes().length,InetAddress.getByName(userList.get(i).getIp()),Integer.parseInt(Resource.UPORT)));
+				} catch (Exception e){ e.printStackTrace(); }
+			}
 		}
+		else
+		{
+			for (int i = 0; i < clientThreads.size(); i++)
+			{
+				clientThreads.get(i).writeToClient(message);
+			}
+		}
+		
 	}
 	
 	public static String parseName(String clientMessage)
