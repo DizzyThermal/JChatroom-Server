@@ -31,13 +31,13 @@ public class ConnectionThread
 					IP = socket.getInetAddress() + ":" + socket.getPort() + " connected!";
 					System.out.println(IP);
 					IP = socket.getInetAddress().toString();
-
+					
 					while(!socket.isClosed())
 					{
 						if(bReader.ready())
 						{
 						String clientMessage = bReader.readLine();
-						//System.out.println(clientMessage);
+						System.out.println(clientMessage);
 						if (clientMessage == null)
 						{
 							//system.out.println("null");
@@ -56,7 +56,6 @@ public class ConnectionThread
 						else if(clientMessage.contains("/file"))
 						{	
 							Main.receiveAndBounceMessage(clientMessage, socket);			
-							
 						}
 						else if(clientMessage.contains("/disconnect"))
 						{
