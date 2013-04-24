@@ -30,16 +30,12 @@ public class Main
 	public static ArrayList<String> ips = new ArrayList<String>();
 	public static ArrayList<ConnectionThread> clientThreads = new ArrayList<ConnectionThread>();
 	
-	public static DatagramSocket serverUDPSocket;
-	public static DatagramPacket receivePacket;
-	public static DatagramPacket sendPacket;
-	
 	public static void main(String[] args)
 	{
 		ConnectionGUI cGUI = new ConnectionGUI();
 		
 		cGUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		cGUI.setSize(300, 100);
+		cGUI.setSize(300, 120);
 		cGUI.setResizable(false);
 		cGUI.setVisible(true);
 		
@@ -74,8 +70,23 @@ public class Main
 		{
 			try
 			{
-				serverUDPSocket = new DatagramSocket(8015);
+				DatagramSocket serverUDPSocket = new DatagramSocket(8015);
+				byte[] receiveData = new byte[1024];
+				byte[] sendData = new byte[1024];
 				
+				while(true)
+				{
+					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+					serverUDPSocket.receive(receivePacket);
+					if(receiveData.equals(null))
+					{
+						//Nothing!
+					}
+					else if(receiveData.toString().contains("/connected"))
+					{
+						userList.add(new User(++userId, receiveData.toString().substring(11), receivePacket.getAddress().toString()));
+					}
+				}
 			}
 			catch (Exception e) { e.printStackTrace(); }
 		}
