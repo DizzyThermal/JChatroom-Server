@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -18,7 +20,7 @@ public class Main
 
 	public static ServerSocket serverSocket;
 	public static String clientMessage;
-	
+	static DatagramSocket UDPSocket;
 	public static BufferedOutputStream bOut;
 	public static InputStream inStream;
 	public static ByteArrayOutputStream baos;
@@ -40,7 +42,10 @@ public class Main
 		cGUI.setVisible(true);
 		
 		while(!connectionGUIStatus)
-			continue;
+		{
+			try { Thread.sleep(1);}
+			catch (InterruptedException e1) { e1.printStackTrace(); }
+		}
 		
 		if(transferType.equals("TCP"))
 		{
@@ -70,22 +75,40 @@ public class Main
 		{
 			try
 			{
-				DatagramSocket serverUDPSocket = new DatagramSocket(8015);
+				UDPSocket = new DatagramSocket(8015);
 				byte[] receiveData = new byte[1024];
 				byte[] sendData = new byte[1024];
 				
 				while(true)
 				{
 					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-					serverUDPSocket.receive(receivePacket);
-					if(receiveData.equals(null))
+					UDPSocket.receive(receivePacket);
+					clientMessage = new String(receivePacket.getData());
+					//System.out.println(clientMessage);
+					if(receivePacket.getData().equals(null))
 					{
-						//Nothing!
+							try { Thread.sleep(1);}
+							catch (InterruptedException e1) { e1.printStackTrace(); }
 					}
-					else if(receiveData.toString().contains("/connected"))
+					else if(clientMessage.contains("/connected"))
 					{
-						userList.add(new User(++userId, receiveData.toString().substring(11), receivePacket.getAddress().toString()));
+						userList.add(new User(++userId, new String(receiveData).substring(11), receivePacket.getAddress().toString().substring(1)));
+						System.out.println(receivePacket.getAddress());
+						UDPSocket.send(new DatagramPacket(String.valueOf(userId).getBytes(), String.valueOf(userId).getBytes().length,InetAddress.getByName("192.168.1.100")/*receivePacket.getAddress()*/,Integer.parseInt(Resource.UPORT)));
+						writeToAll("/userlist " + Main.getUserList());
 					}
+					else if(clientMessage.contains("/name"))
+					{
+						writeToAll("/console ** " + Main.getUserFromId(Integer.parseInt((clientMessage.split(" ")[1]).split("\\\\")[0])) + " CHANGED THEIR NAME TO " + Main.parseName(clientMessage) + " **");
+						writeToAll("/update " + Main.updateUser(clientMessage));
+					}
+					else if(clientMessage.contains("/disconnect"))
+					{
+						writeToAll("/remove " + Main.removeUser(clientMessage));
+						userList.remove(receivePacket.getAddress().toString());
+					}
+					else
+						writeToAll("/msg " + clientMessage);
 				}
 			}
 			catch (Exception e) { e.printStackTrace(); }
@@ -212,8 +235,12 @@ public class Main
 	
 	public static void writeToAll(String message)
 	{
-		for(int i = 0; i < clientThreads.size(); i++)
-			clientThreads.get(i).writeToClient(message);
+		for(int i = 0; i < userList.size(); i++)
+		{
+			try {
+				UDPSocket.send(new DatagramPacket(message.getBytes(),message.getBytes().length,InetAddress.getByName(userList.get(i).getIp()),Integer.parseInt(Resource.UPORT)));
+			} catch (Exception e){ e.printStackTrace(); }
+		}
 	}
 	
 	public static String parseName(String clientMessage)
