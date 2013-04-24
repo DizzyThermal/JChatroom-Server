@@ -36,10 +36,12 @@ public class Main
 		{
 			try
 			{
-				if(serverSocket.getInetAddress().toString() != "0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
+			
+				//System.out.println(serverSocket.getInetAddress().toString());
+				if(serverSocket.getInetAddress().toString() != "0.0.0.0/0.0.0.0" && !ips.contains(serverSocket.getInetAddress().toString()))
 				{
 					clientThreads.add(new ConnectionThread(++userId, serverSocket.accept()));
-					ips.add(serverSocket.getInetAddress().toString());
+					ips.add(serverSocket.getInetAddress().toString().split("/")[0]);
 				}
 			}
 			catch (Exception e) { e.printStackTrace(); }
@@ -114,13 +116,14 @@ public class Main
 	public static void receiveAndBounceMessage(String incomingMessage, Socket socket)
 	{
 		incomingMessage = incomingMessage.substring(6);
+		ServerSocket temp = null;
 		int id = Integer.parseInt(incomingMessage.split("\\\\")[0]);
 		String fileName = incomingMessage.split("\\\\")[1];
 		writeToAll("/file " + id + "\\" + fileName);
 		byte[] incomingBytes = new byte[1];
 		try
 		{
-			ServerSocket temp = new ServerSocket(Integer.parseInt(Resource.PORT)+10);
+			temp = new ServerSocket(Integer.parseInt(Resource.PORT)+10);
 			socket = temp.accept();
 			inStream = socket.getInputStream();
 		}
@@ -135,8 +138,12 @@ public class Main
 				baos.write(incomingBytes);
 				numBytes = inStream.read(incomingBytes);
 			} while (numBytes != -1);
+			inStream.close();
+			socket.close();
+			temp.close();
 		}
 		catch(IOException ex) { ex.printStackTrace(); }
+		
 		for(int i = 0; i < userList.size(); i++)
 		{
 			try 
@@ -148,12 +155,12 @@ public class Main
 			if (bOut != null)
 			{
 				byte[] outArray = baos.toByteArray();
-	
 	            try 
 	            {
 	                bOut.write(outArray, 0, outArray.length);
 	                bOut.flush();
 	                bOut.close();
+	                socket.close();
 	            } catch (IOException ex) { ex.printStackTrace(); }
 			}
 		}
