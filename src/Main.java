@@ -127,9 +127,9 @@ public class Main
 		for(int i = 0; i < userList.size(); i++)
 		{
 			int id = userList.get(i).getId();
-			String name = userList.get(i).getName();
+			String name = userList.get(i).getName().trim();
 
-			userStr = userStr + id + "\\" + name;
+			userStr = userStr + String.valueOf(id) + "\\" + name;
 			if((i+1) < userList.size())
 				userStr = userStr + "\\";
 		}
